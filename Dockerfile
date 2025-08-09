@@ -16,9 +16,11 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 # Update packages for security patches
 RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-
 WORKDIR /app
 COPY --from=build /app/out .
+
+# Environment settings - can be overridden via docker run -e or docker-compose.yml
+ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Expose the port your app runs on
 EXPOSE 80
