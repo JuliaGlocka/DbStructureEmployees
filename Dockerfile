@@ -24,4 +24,4 @@ COPY --from=build /app/out .
 EXPOSE 80
 
 # Command to run the application
-ENTRYPOINT ["dotnet", "dbstructureemployyes.dll"]
+ENTRYPOINT ["dotnet", "DbStructureEmployees.dll"]
