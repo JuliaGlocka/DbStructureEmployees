@@ -18,17 +18,20 @@ DbStructureEmployees is a .NET 8.0 web application built with Razor Pages. It se
 
 ```
 DbStructureEmployees/
-  Pages/
-    Index.cshtml
-    Privacy.cshtml
-  wwwroot/
-  Program.cs
-  DbStructureEmployees.csproj
-  appsettings.json
-  Dockerfile
-  docker-compose.yml
-  Run-DockerContainer.ps1
-  README.md
+|
+|---- Pages/                          # Razor Pages directory
+|     |---- Index.cshtml               # Homepage view
+|     |---- Privacy.cshtml             # Privacy policy page
+|
+|---- wwwroot/                         # Static files (CSS, JS, images)
+|
+|---- Program.cs                       # Application entry point and configuration
+|---- DbStructureEmployees.csproj      # .NET project file with dependencies
+|---- appsettings.json                 # Application configuration (logging, connection strings)
+|---- Dockerfile                       # Multi-stage Docker build configuration
+|---- docker-compose.yml               # Docker services orchestration (app + PostgreSQL)
+|---- Run-DockerContainer.ps1          # PowerShell automation script for container management
+|---- README.md                        # Project documentation
 ```
 
 ## .gitignore
