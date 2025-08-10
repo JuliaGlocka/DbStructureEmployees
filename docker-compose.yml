@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:80"
     environment:
-      # Use environment variables for production, avoid hardcoding sensitive data
+      # environment variables production, no hardcoding sensitive data
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=employeedb;Username=postgres;Password=1234"
     depends_on:
       - db
@@ -18,12 +18,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234  # Development only, never store plaintext password in production
+      POSTGRES_PASSWORD: 1234  # development only!
       POSTGRES_DB: employeedb
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data  # Persist PostgreSQL data between container restarts
+      - postgres_data:/var/lib/postgresql/data  # persist PostgreSQL data between container restarts
 
 volumes:
   postgres_data:
