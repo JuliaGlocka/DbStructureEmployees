@@ -1,13 +1,17 @@
+using DbStructureEmployees.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 🔧 Set the listening port to 80 (for Docker compatibility)
+#pragma warning disable S1075 // URIs should not be hardcoded
 builder.WebHost.UseUrls("http://*:80");
+#pragma warning restore S1075 // URIs should not be hardcoded
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-// TO DO: Add
-// builder.Services.AddDbContext<AppDbContext>
-// (options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Register the DbContext with dependency injection
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))); //minimal hosting model
 
 var app = builder.Build();
 
@@ -30,4 +34,4 @@ app.UseAuthorization();
 // Map Razor Pages endpoints
 app.MapRazorPages();
 
-app.Run();
+await app.RunAsync();
