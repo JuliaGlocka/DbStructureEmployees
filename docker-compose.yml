@@ -3,19 +3,27 @@ version: '3.8'
 services:
   web:
     build: .
+    container_name: dbstructureemployees-web
     ports:
       - "8080:80"
     environment:
-      # In production, this should come from an environment variable, not hardcoded.
-      ConnectionStrings__DefaultConnection: "Server=db;Database=exampledb;User Id=postgres;Password=mysecretpassword;"
+      # Use environment variables for production, avoid hardcoding sensitive data
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=employeedb;Username=postgres;Password=1234"
     depends_on:
       - db
 
   db:
-    image: postgres
+    image: postgres:15
+    container_name: dbstructureemployees-db
+    restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: mysecretpassword # For recruitment/demo only
-      POSTGRES_DB: exampledb
+      POSTGRES_PASSWORD: 1234  # Development only, never store plaintext password in production
+      POSTGRES_DB: employeedb
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persist PostgreSQL data between container restarts
+
+volumes:
+  postgres_data:
