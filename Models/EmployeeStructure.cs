@@ -2,8 +2,8 @@
 {
     public class EmployeeStructure
     {
-        public int EmployeesId { get; set; }
+        public int EmployeeId { get; set; }
         public int SuperiorId { get; set; }
-        public int SuperiorLeveled { get; set; }
+        public int SuperiorLevel { get; set; }
     }
 }
