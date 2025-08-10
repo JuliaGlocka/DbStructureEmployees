@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36301.6 d17.14
+VisualStudioVersion = 17.14.36301.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbStructureEmployees", "DbStructureEmployees.csproj", "{714F09DC-3239-1B96-8073-12BC5BBC346E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbStructureEmployees.Tests", "DbStructureEmployees.Tests\DbStructureEmployees.Tests.csproj", "{27698FCB-C6BE-4DA1-9BEF-CF4652658A66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{714F09DC-3239-1B96-8073-12BC5BBC346E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{714F09DC-3239-1B96-8073-12BC5BBC346E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{714F09DC-3239-1B96-8073-12BC5BBC346E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27698FCB-C6BE-4DA1-9BEF-CF4652658A66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27698FCB-C6BE-4DA1-9BEF-CF4652658A66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27698FCB-C6BE-4DA1-9BEF-CF4652658A66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27698FCB-C6BE-4DA1-9BEF-CF4652658A66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
