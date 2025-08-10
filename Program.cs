@@ -5,6 +5,9 @@ builder.WebHost.UseUrls("http://*:80");
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+// TO DO: Add
+// builder.Services.AddDbContext<AppDbContext>
+// (options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
