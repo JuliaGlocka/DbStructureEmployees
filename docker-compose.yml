@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:80"
     environment:
-      # In production, this should come from an environment variable, not hardcoded.
+      # !!! In production, this should come from an environment variable, not hardcoded. !!!
       ConnectionStrings__DefaultConnection: "Server=db;Database=exampledb;User Id=postgres;Password=mysecretpassword;"
     depends_on:
       - db
@@ -15,7 +15,7 @@ services:
     image: postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: mysecretpassword # For recruitment/demo only
+      POSTGRES_PASSWORD: mysecretpassword # For demo only
       POSTGRES_DB: exampledb
     ports:
       - "5432:5432"
