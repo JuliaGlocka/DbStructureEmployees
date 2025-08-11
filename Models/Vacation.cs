@@ -7,8 +7,8 @@ namespace DbStructureEmployees.Models
     {
         [Key]
         public int Id { get; set; }
-        public DateTime DateSince { get; set; }
-        public DateTime DateUntil { get; set; }
+        public DateTime DateStart { get; set; }
+        public DateTime DateEnd { get; set; }
         public double NumberOfHours { get; set; }
         public bool IsPartialVacation { get; set; }
         public int EmployeeId { get; set; }
