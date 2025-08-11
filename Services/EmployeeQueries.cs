@@ -20,7 +20,7 @@ namespace DbStructureEmployees.Services
 
         // helper - methods to get start and end of the year
         private static DateTime GetStartOfYear(int year) =>
-    new DateTime(year, 1, 1, 0, 0, 0, DefaultKind);
+            new DateTime(year, 1, 1, 0, 0, 0, DefaultKind);
 
         private static DateTime GetEndOfYear(int year) =>
             new DateTime(year, 12, 31, 23, 59, 59, DefaultKind);
@@ -41,6 +41,7 @@ namespace DbStructureEmployees.Services
 
             return query;
         }
+
         public List<(Employee employee, int usedVacationDays)> GetEmployeesVacationDaysUsedThisYear()
         {
             var yearStart = GetStartOfYear(2019);
@@ -63,6 +64,7 @@ namespace DbStructureEmployees.Services
 
             return query;
         }
+
         public List<Team> GetTeamsWithoutVacationIn2019()
         {
             var yearStart = GetStartOfYear(2019);
@@ -102,6 +104,5 @@ namespace DbStructureEmployees.Services
         {
             return CountFreeDaysForEmployee(employee, vacations, vacationPackage) > 0;
         }
-
     }
 }
