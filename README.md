@@ -1,297 +1,322 @@
 # DbStructureEmployees
 
-Sample ASP.NET Core 8.0 application using Razor Pages, demonstrating basic web structure and containerization with Docker.
-
-## Description
-
-DbStructureEmployees is a .NET 8.0 web application built with Razor Pages. It serves as a minimal example of how to structure a web project, publish it, and run it inside a Docker container. The app exposes a simple homepage and privacy page, and is ready to be extended with database integration and API endpoints.
-
-## Technologies Used
-
-- .NET 8.0 SDK and ASP.NET Core Runtime
-- Razor Pages
-- Docker (multi-stage build)
-- PowerShell (for container automation)
-- PostgreSQL (optional, via Docker Compose)
-
-## Project Structure
-
-```
-DbStructureEmployees/
-|
-|---- Pages/                          # Razor Pages directory
-|     |---- Index.cshtml               # Homepage view
-|     |---- Privacy.cshtml             # Privacy policy page
-|
-|---- wwwroot/                         # Static files (CSS, JS, images)
-|
-|---- Program.cs                       # Application entry point and configuration
-|---- DbStructureEmployees.csproj      # .NET project file with dependencies
-|---- appsettings.json                 # Application configuration (logging, connection strings)
-|---- Dockerfile                       # Multi-stage Docker build configuration
-|---- docker-compose.yml               # Docker services orchestration (app + PostgreSQL)
-|---- Run-DockerContainer.ps1          # PowerShell automation script for container management
-|---- README.md                        # Project documentation
-```
-
-## .gitignore
-
-To avoid tracking unnecessary files like `bin`, `obj`, `.vs`, etc., use a `.gitignore` file.
-
-> **Note:** If files were already committed before `.gitignore` was added, run:
-> ```bash
-> git rm -r --cached .
-> git add .
-> git commit -m "Clean tracked files now ignored by .gitignore"
-> ```
-
-## Docker Setup
-
-### 1. Login to Docker Hub
-
-```bash
-docker login
-```
-
-### 2. Build the image
-
-```bash
-docker build -t YOUR_DOCKER_USERNAME/dbstructureemployees:latest .
-```
-
-### 3. Run the container
-
-```bash
-docker run -d -p 5000:80 --name mydbstructureemployees YOUR_DOCKER_USERNAME/dbstructureemployees:latest
-```
-
-### 4. Stop and remove the container
-
-```bash
-docker stop mydbstructureemployees
-docker rm mydbstructureemployees
-```
-
-## Dockerfile (Multi-Stage Build)
-
-### Build stage:
-
-```dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
-COPY . .
-RUN dotnet publish -c Release -o out
-```
-
-### Runtime stage:
-
-```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/out .
-ENTRYPOINT ["dotnet", "DbStructureEmployees.dll"]
-```
-
-## PowerShell Script: Run-DockerContainer.ps1
-
-Automates stopping/removing existing container and starting a new one.
-
-```powershell
-param(
-    [string]$containerName = "mydbstructureemployees",
-    [string]$imageName = "YOUR_DOCKER_USERNAME/dbstructureemployees:latest",
-    [int]$portHost = 5000,
-    [int]$portContainer = 80,
-    [string]$environment = "Production"
-)
-
-$existing = docker ps -a --filter "name=$containerName" --format "{{.ID}}"
-
-if ($existing) {
-    Write-Host "Stopping container $containerName ..."
-    docker stop $containerName
-    Write-Host "Removing container $containerName ..."
-    docker rm $containerName
-} else {
-    Write-Host "Container $containerName does not exist. Proceeding..."
-}
-
-Write-Host "Running new container $containerName ..."
-docker run -d -p "${portHost}:${portContainer}" --name $containerName -e ASPNETCORE_ENVIRONMENT=$environment $imageName
-```
-
-### Usage Examples:
-
-**Default settings (port 5000):**
-
-```powershell
-.\Run-DockerContainer.ps1
-```
-
-**Custom host port (port 8080):**
-
-```powershell
-.\Run-DockerContainer.ps1 -portHost 8080 -portContainer 80
-```
-
-**Development environment:**
-
-```powershell
-.\Run-DockerContainer.ps1 -environment "Development"
-```
-
-**Port 80 (requires admin rights on Windows):**
-
-```powershell
-.\Run-DockerContainer.ps1 -portHost 80 -portContainer 80
-```
-
-> **Port Parameters:**
-> - `portHost`: The port on your host machine (external access)
-> - `portContainer`: The internal container port (usually 80 for ASP.NET Core)
-
-## Docker Compose
-
-For running with PostgreSQL database:
-
-```yaml
-version: '3.8'
-
-services:
-  web:
-    build: .
-    ports:
-      - "8080:80"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=db;Database=employeesdb;Username=postgres;Password=demo123
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=employeesdb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=demo123
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-```
-
-### Run with Docker Compose:
-
-```bash
-docker-compose up -d
-```
-
-## Access the App
-
-**Default PowerShell script settings:**
-
-Open http://localhost:5000
-
-**Custom port example:**
-
-If you run with `-portHost 8080`, open http://localhost:8080
-
-**Docker Compose:**
-
-Open http://localhost:8080
-
-You should see the default Razor Pages homepage with links to "Home" and "Privacy".
-
-## Configuration and Run Summary
-
-### 1. Dockerfile
-- Uses multi-stage build: SDK for building the app, runtime for running it.
-- Sets the environment variable `ASPNETCORE_ENVIRONMENT=Production` with the option to override.
-- Exposes port 80, the standard for ASP.NET Core apps.
-- Updates packages in the runtime image for security patches.
-
-### 2. docker-compose.yaml
-- Defines two services: `web` (our application) and `db` (PostgreSQL).
-- Maps the app port to 8080 locally.
-- Includes an example connection string with a hardcoded password, noted as for recruitment/demo purposes only.
-- Uses `depends_on` to ensure proper startup order.
-
-### 3. Run-DockerContainer.ps1
-- A PowerShell script for easy container management with parameters (name, ports, environment, connection string).
-- Stops and removes any existing container before running a new one.
-- Allows overriding connection string and environment variables via Docker run parameters.
-
-### 4. appsettings.json
-- Minimal configuration without sensitive data.
-- Logging and allowed hosts settings.
-- Placeholder for connection strings can be added.
-
-### 5. Program.cs
-- Loads configuration from JSON files depending on the environment.
-- Sets up ASP.NET Core middleware and HTTP pipeline.
-- Enables flexible configuration management without code changes.
-
-### 6. Best Practices & Security
-- Passwords in config files are only for demo/recruitment purposes.
-- In production, secrets should be managed securely (e.g., secret manager, environment variables).
-- Configuration and deployment are flexible and easy to modify, facilitating testing and production rollout.
+## [🇬🇧 English](#english-version) | [🇵🇱 Polski](#wersja-polska)
 
 ---
 
-*This setup demonstrates a good understanding of modern ASP.NET Core containerized applications, with a focus on configuration separation, security, and ease of deployment.*
+## English Version <a name="english-version"></a>
 
-### Port Configuration Summary
+### Project Overview
+This project is a .NET Core application designed to manage employee data and their vacation schedules. It uses Entity Framework Core with PostgreSQL as the database. Docker is used for containerization.
 
-| **File/Location** | **Configuration** |
-|---|---|
-| **Program.cs** | `builder.WebHost.UseUrls("http://*:80");` |
-| **Dockerfile** | `EXPOSE 80` |
-| **docker-compose.yml** | `ports: - "8080:80"` |
-| **Run-DockerContainer.ps1** | `docker run -p 8080:80 ...` |
+### Technologies
+- .NET 8.0
+- EF Core with PostgreSQL provider
+- Docker (for containerization)
+- Xunit for unit testing
 
-## Environment Configuration
+### Project Structure
+```bash
+DbStructureEmployees/
+│
+├── Controllers/                                  // Controllers handling API or MVC requests
+│ └── EmployeesController.cs                     // Controller managing employee-related endpoints
+│
+├── Data/                                         // EF Core configuration and DbContext
+│ └── AppDbContext.cs                            // Main database context
+│
+├── DbStructureEmployees.Tests/                // Unit tests project
+│ ├── DbStructureEmployees.Tests.csproj
+│ ├── EmployeeStructureTest.cs             
+│ ├── EmployeeTest.cs 
+│ ├── bin/
+│ └── obj/
+│
+├── Models/ 
+│ └── Employee.cs 
+│
+├── Pages/                                       // Razor Pages (UI views)
+│ ├── Error.cshtml                              // Error page
+│ ├── Index.cshtml                             // Main/home page
+│ ├── Privacy.cshtml                          // Privacy policy page
+│ ├── Shared/                                // Shared layout and partial views
+│ ├── _ViewImports.cshtml                   // Razor view imports
+│ └── _ViewStart.cshtml                    // Razor view startup configuration
+│
+├── Properties/                             // Project properties and settings
+│ └── launchSettings.json                  // Launch configuration for debugging
+│
+├── Services/                       // Business logic and service classes
+│ └── EmployeeStructure.cs
+│
+├── wwwroot/                     // Static files (CSS, JS, images, libs)
+│ ├── css/
+│ ├── favicon.ico
+│ ├── js/
+│ └── lib/
+│
+├── Dockerfile                                  // Docker image build definition
+├── Run-DockerContainer.ps1                    // PowerShell script to run Docker container
+├── docker-compose.yml                        // Docker Compose configuration (if used)
+├── appsettings.json                         // Main application configuration
+├── appsettings.Development.json            // Development environment config
+├── Program.cs                             // Application entry point (.NET Core)
+├── README.md // Project documentation
+├── DbStructureEmployees.csproj             // .NET project file
+├── DbStructureEmployees.sln               // Visual Studio solution file
+├── builddiag.txt                         // Optional diagnostic files
+├── compileitems.txt
+├── bin/                                // Compiled binaries output
+└── obj/                               // Intermediate compilation files
+```
+ & Highlights
+- **Models:** Employee, Vacation, VacationPackage, Team — core domain entities.
+- **Services:** EmployeeQueries - contains queries and business logic for employees and vacations.
+- **DbContext:** Manages database connection and entity mapping.
+- **Key Methods:**
+  - `GetEmployeesFromDotNetWithVacationIn2019()` — filters employees by team and vacations.
+  - `CountFreeDaysForEmployee()` — calculates remaining vacation days.
+  - `IfEmployeeCanRequestVacation()` — returns if employee can request vacation based on remaining days.
 
-The application supports different environments through the `ASPNETCORE_ENVIRONMENT` variable:
+#### Code snippet - CountFreeDaysForEmployee:
+```csharp
+public static int CountFreeDaysForEmployee(Employee employee, List<Vacation> vacations, VacationPackage vacationPackage)
+{
+    var year = DateTime.UtcNow.Year;
+    var usedDays = vacations
+        .Where(v => v.EmployeeId == employee.Id && v.DateStart.Year == year)
+        .Sum(v => (v.DateEnd - v.DateStart).Days + 1);
 
-- **Production** (default): Optimized settings, minimal logging
-- **Development**: Detailed error pages, verbose logging
-- **Staging**: Production-like with additional debugging
-
-### Override Environment:
-
-```powershell
-.\Run-DockerContainer.ps1 -environment "Development"
+    var freeDays = vacationPackage.TotalDays - usedDays;
+    return freeDays > 0 ? freeDays : 0;
+}
 ```
 
-## Important Notes
+### Running the project
 
-### Port 80 on Windows
-- Running on port 80 requires administrator rights on Windows
-- Use elevated PowerShell or Command Prompt
-- Alternative: Use a different host port like 8080
+1. Clone repository:
+```bash
+git clone https://github.com/JuliaGlocka/DbStructureEmployees
+cd DbStructureEmployees
+```
 
-### Container Port Information
-- The app **always** listens on port 80 inside the container
-- External host port is configurable via script or docker-compose
-- Port mapping format: `hostPort:containerPort`
+2. Ensure PostgreSQL is running and connection string is updated in `appsettings.json`.
 
-### Troubleshooting
-- Check if the port is free: `netstat -an | findstr :5000`
-- Ensure Docker is running: `docker version`
-- View container logs: `docker logs mydbstructureemployees`
+3. Apply migrations:
+```bash
+dotnet ef database update
+```
 
-## Security Best Practices
+4. Run project:
+```bash
+dotnet run
+```
 
-- **Never use hardcoded passwords in production**
-- Use Docker secrets or environment variables for sensitive data
-- Regularly update base images for security patches
-- Use least-privilege principles for database connections
+5. (Optional) Docker:
+```bash
+docker build -t dbstructureemployees .
+docker run -p 5000:5000 dbstructureemployees
+```
 
-## Author
+#### Personal Development Setup (Recommended)
+If you're using Windows with Docker Desktop, here's a step-by-step approach that works well:
 
-**Name:** glockajulia  
-**Date:** August 2025  
-**Location:** Warszawa, Polska
+1. **Open Docker Desktop** (make sure it's running)
+
+2. **Open Bash** and navigate to project directory
+
+3. **Build Docker image**:
+```bash
+docker build -t your_dockerhub_username/your_image_name:your_tag .
+```
+
+4. **Open PowerShell** and navigate to project directory
+
+5. **Run the container using PowerShell script**:
+```powershell
+.\Run-DockerContainer.ps1 -containerName "your_container_name" -imageName "your_dockerhub_username/your_image_name:tag" -portHost 5000 -portContainer 80
+```
+
+6. **Test the application**:
+   - Open browser and go to: http://localhost:5000
+   - Or test with curl in Bash: `curl http://localhost:5000`
+
+### Verifying EF Core connection with PostgreSQL
+- Use `dotnet ef migrations list` to check existing migrations.
+- Use `dotnet ef database update` to apply migrations.
+- Check logs for successful connection on startup.
+
+### Tests
+- Unit tests use Xunit.
+- Test cases cover vacation request eligibility.
+- Tests can be run with:
+```bash
+dotnet test
+```
+
+### Possible extensions
+- Implement caching to reduce DB hits.
+- Use DTOs to optimize data transfer.
+- Extend lazy loading for related entities.
+
+### Contact / Author
+Julia Glocka
+GitHub: https://github.com/JuliaGlocka
+Email: glockajulia@gmail.com
+---
+
+## Wersja Polska <a name="wersja-polska"></a>
+
+### Opis projektu
+Projekt to aplikacja .NET Core do zarządzania pracownikami i ich urlopami. Korzysta z Entity Framework Core i bazy PostgreSQL. Projekt jest dockeryzowany.
+
+### Technologie
+- .NET 8.0
+- EF Core z providerem PostgreSQL
+- Docker (konteneryzacja)
+- Xunit (testy jednostkowe)
+
+### Struktura projektu i najważniejsze elementy
+```bash
+DbStructureEmployees/
+│
+├── Controllers/                                  // Kontrolery obsługujące żądania API lub MVC
+│ └── EmployeesController.cs                     //  Kontroler zarządzający endpointami związanymi z pracownikami
+│
+├── Data/                                         //  Konfiguracja EF Core i DbContext
+│ └── AppDbContext.cs                            //   Główny kontekst bazy danych
+│
+├── DbStructureEmployees.Tests/                // Projekt testów jednostkowych
+│ ├── DbStructureEmployees.Tests.csproj
+│ ├── EmployeeStructureTest.cs             
+│ ├── EmployeeTest.cs 
+│ ├── bin/
+│ └── obj/
+│
+├── Models/                                         //  Modele danych
+│ └── Employee.cs                                  //   Model reprezentujący pracownika
+│
+├── Pages/                                       // Razor Pages ( UI)
+│ ├── Error.cshtml                              //  Strona błędu
+│ ├── Index.cshtml                             //   Strona główna
+│ ├── Privacy.cshtml                          //    Strona polityki prywatności
+│ ├── Shared/                                //     Wspólny layout i widoki częściowe
+│ ├── _ViewImports.cshtml                   //      Importy dla widoków Razor
+│ └── _ViewStart.cshtml                    //       Konfiguracja startowa dla Razor Pages
+│
+├── Properties/                             // Właściwości projektu i ustawienia
+│ └── launchSettings.json                  //  Konfiguracja uruchamiania do debugowania
+│
+├── Services/                       // Logika biznesowa i klasy usługowe
+│ └── EmployeeStructure.cs         //  Klasa obsługująca strukturę pracowników
+│
+├── wwwroot/                     // Pliki statyczne (CSS, JS, obrazy, biblioteki)
+│ ├── css/
+│ ├── favicon.ico
+│ ├── js/
+│ └── lib/
+│
+├── Dockerfile                                  // Definicja budowania obrazu Docker
+├── Run-DockerContainer.ps1                    // Skrypt PowerShell do uruchamiania kontenera Docker
+├── docker-compose.yml                        // Konfiguracja Docker Compose (jeśli używana)
+├── appsettings.json                         // Główna konfiguracja aplikacji
+├── appsettings.Development.json            // Konfiguracja środowiska developerskiego
+├── Program.cs                             // Punkt wejścia aplikacji (.NET Core)
+├── README.md                             // Dokumentacja projektu
+├── DbStructureEmployees.csproj             // Plik projektu .NET
+├── DbStructureEmployees.sln               // Plik rozwiązania Visual Studio
+├── builddiag.txt                         // Opcjonalne pliki diagnostyczne
+├── compileitems.txt
+├── bin/                                // Wyjściowe pliki binarne
+└── obj/                               // Pliki pośrednie kompilacjis
+```
+
+- **Modele:** Employee, Vacation, VacationPackage, Team — podstawowe encje domenowe.
+- **Serwisy:** EmployeeQueries — logika biznesowa i zapytania dotyczące pracowników i urlopów.
+- **DbContext:** zarządza połączeniem z bazą i mapowaniem encji.
+- **Kluczowe metody:**
+  - `GetEmployeesFromDotNetWithVacationIn2019()` — zwraca pracowników z zespołu .NET z urlopami w 2019 r.
+  - `CountFreeDaysForEmployee()` — oblicza pozostałą liczbę dni urlopu.
+  - `IfEmployeeCanRequestVacation()` — sprawdza, czy pracownik może prosić o urlop.
+
+#### Fragment kodu - CountFreeDaysForEmployee:
+```csharp
+public static int CountFreeDaysForEmployee(Employee employee, List<Vacation> vacations, VacationPackage vacationPackage)
+{
+    var year = DateTime.UtcNow.Year;
+    var usedDays = vacations
+        .Where(v => v.EmployeeId == employee.Id && v.DateStart.Year == year)
+        .Sum(v => (v.DateEnd - v.DateStart).Days + 1);
+
+    var freeDays = vacationPackage.TotalDays - usedDays;
+    return freeDays > 0 ? freeDays : 0;
+}
+```
+### Uruchomienie projektu
+
+1. Sklonuj repozytorium:
+```bash
+git clone https://github.com/JuliaGlocka/DbStructureEmployees
+cd DbStructureEmployees
+```
+
+2. Upewnij się, że PostgreSQL działa i poprawnie skonfigurowano connection string w `appsettings.json`.
+
+3. Wykonaj migracje:
+```bash
+dotnet ef database update
+```
+
+4. Uruchom projekt:
+```bash
+dotnet run
+```
+
+5. (Opcjonalnie) Docker:
+```bash
+docker build -t dbstructureemployees .
+docker run -p 5000:5000 dbstructureemployees
+```
+
+#### Osobiste ustawienia rozwojowe (Zalecane)
+Jeśli używasz Windows z Docker Desktop, oto krok po kroku podejście, które dobrze działa:
+
+1. **Otwórz Docker Desktop** (upewnij się, że działa)
+
+2. **Otwórz Bash** i przejdź do katalogu projektu
+
+3. **Zbuduj obraz Docker**
+
+4. **Otwórz PowerShell** i przejdź do katalogu projektu
+
+5. **Uruchom kontener używając skryptu PowerShell**:
+```powershell
+.\Run-DockerContainer.ps1 -containerName "nazwa_twojego_kontenera" -imageName "nazwa_uzytkownika_dockerhub/nazwa_obrazu:tag" -portHost 5000 -portContainer 80
+```
+
+6. **Przetestuj aplikację**:
+   - Otwórz przeglądarkę i idź do: http://localhost:5000
+   - Lub przetestuj z curl w Bash: `curl http://localhost:5000`
+
+### Weryfikacja połączenia EF Core z PostgreSQL
+- `dotnet ef migrations list` pokazuje dostępne migracje.
+- `dotnet ef database update` stosuje migracje.
+- Logi startowe pokazują czy połączenie z bazą działa poprawnie.
+
+### Testy
+- Testy jednostkowe z Xunit.
+- Testy sprawdzają możliwość zgłaszania urlopu.
+- Uruchom testy poleceniem:
+```bash
+dotnet test
+```
+
+### Możliwe rozszerzenia
+- Caching do ograniczenia zapytań do bazy.
+- DTO do optymalizacji transferu danych.
+- Lazy loading dla powiązanych encji.
+
+### Kontakt / Autor
+**Julia Głocka**
+- Email: glockajulia@gmail.com
+- GitHub: https://github.com/JuliaGlocka
