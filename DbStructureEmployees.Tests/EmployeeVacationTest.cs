@@ -1,5 +1,5 @@
 ﻿using DbStructureEmployees.Models;
-using DbStructureEmployees.Services; // musi zawierać VacationService z metodą IfEmployeeCanRequestVacation
+using DbStructureEmployees.Services;
 using System.Collections.Generic;
 using Xunit;
 
@@ -20,7 +20,7 @@ namespace DbStructureEmployees.Tests
                 TeamId = team.Id,
                 Team = team,
                 VacationPackageId = vacationPackage.Id,
-                Vacations = new List<Vacation>() // pusta lista urlopów
+                Vacations = new List<Vacation>() // total list of vacations
             };
 
             // act
