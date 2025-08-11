@@ -1,3 +1,5 @@
+﻿using System.Collections.Generic;
+using System.Linq;
 using DbStructureEmployees.Models;
 using DbStructureEmployees.Services;
 using Xunit;
@@ -16,15 +18,15 @@ namespace DbStructureEmployees.Tests
             // act
             var result = employeeStructure.FillEmployeesStructure(employees);
 
-            // assert - fix null reference warnings
+            // assert
             Assert.NotNull(result);
             Assert.NotEmpty(result);
 
-            // use null-conditional operators or null checks
             var firstRelation = result.FirstOrDefault();
-            Assert.NotNull(firstRelation); // ensure it's not null before accessing properties
+            Assert.NotNull(firstRelation);
             Assert.True(firstRelation.EmployeeId > 0);
             Assert.True(firstRelation.SuperiorId > 0);
+            Assert.True(firstRelation.SuperiorLevel > 0);
         }
 
         [Fact]
@@ -36,21 +38,14 @@ namespace DbStructureEmployees.Tests
             var structure = employeeStructure.FillEmployeesStructure(employees);
 
             // act
-            var result = EmployeeStructure.GetSuperiorRowOfEmployee(structure, 1, 2);
+            var result1 = EmployeeStructure.GetSuperiorRowOfEmployee(structure, 2, 1);
+            var result2 = EmployeeStructure.GetSuperiorRowOfEmployee(structure, 4, 3);
+            var result3 = EmployeeStructure.GetSuperiorRowOfEmployee(structure, 4, 1);
 
             // assert
-            Assert.NotNull(result);
-            Assert.Equal(1, result.Value); // .Value since it's nullable
-        }
-
-        private List<Employee> CreateTestEmployees()
-        {
-            // create test data with proper initialization to avoid nulls
-            var ceo = new Employee { Id = 3, Name = "CEO", Superior = null };
-            var manager = new Employee { Id = 2, Name = "Manager", Superior = ceo };
-            var employee = new Employee { Id = 1, Name = "Employee", Superior = manager };
-
-            return new List<Employee> { employee, manager, ceo };
+            Assert.Equal(1, result1);  // Id2 has superior Id1 at level 1
+            Assert.Null(result2);      // Id4 does not exist in the structure
+            Assert.Null(result3);      // Id4 does not exist in the structure
         }
 
         [Fact]
@@ -59,7 +54,7 @@ namespace DbStructureEmployees.Tests
             // arrange
             var employees = new List<Employee>
             {
-                new Employee { Id = 1, Name = "TopLevel", Superior = null }
+                new Employee { Id = 1, Name = "Jan Kowalski", SuperiorId = 0 } // no superior possible
             };
             var employeeStructure = new EmployeeStructure();
 
@@ -68,7 +63,7 @@ namespace DbStructureEmployees.Tests
 
             // assert
             Assert.NotNull(result);
-            Assert.Empty(result); // Should be empty since no superior chain exists
+            Assert.Empty(result); // no relation, when no superior
         }
 
         [Fact]
@@ -82,6 +77,16 @@ namespace DbStructureEmployees.Tests
 
             // assert
             Assert.Null(result);
+        }
+
+        private List<Employee> CreateTestEmployees()
+        {
+            return new List<Employee>
+            {
+                new Employee { Id = 1, Name = "Henryk Kowalski", SuperiorId = 0 },
+                new Employee { Id = 2, Name = "Jan Nowak", SuperiorId = 1 },
+                new Employee { Id = 3, Name = "Anna Wiśniewska", SuperiorId = 2 }
+            };
         }
     }
 }
