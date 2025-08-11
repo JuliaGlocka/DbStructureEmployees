@@ -9,5 +9,6 @@ namespace DbStructureEmployees.Models
         public string ?Name { get; set; }
         public int GrantedDays { get; set; }
         public int Year { get; set; }
+        public int TotalDays { get; set; }
     }
 }

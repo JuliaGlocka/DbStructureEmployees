@@ -18,16 +18,13 @@ namespace DbStructureEmployees.Services
             _context = context;
         }
 
-
-
-        // Helper do początku roku
+        // helper - methods to get start and end of the year
         private static DateTime GetStartOfYear(int year) =>
     new DateTime(year, 1, 1, 0, 0, 0, DefaultKind);
 
         private static DateTime GetEndOfYear(int year) =>
             new DateTime(year, 12, 31, 23, 59, 59, DefaultKind);
 
-        // a) Get list of employees from ".NET" team with at least one vacation request in 2019
         public List<Employee> GetEmployeesFromDotNetWithVacationIn2019()
         {
             var yearStart = GetStartOfYear(2019);
@@ -44,9 +41,6 @@ namespace DbStructureEmployees.Services
 
             return query;
         }
-
-        // b) Get list of employees along with the number of vacation days used this year
-        // Count days only for vacations fully in the past (up to today)
         public List<(Employee employee, int usedVacationDays)> GetEmployeesVacationDaysUsedThisYear()
         {
             var yearStart = GetStartOfYear(2019);
@@ -69,8 +63,6 @@ namespace DbStructureEmployees.Services
 
             return query;
         }
-
-        // c) Get list of teams whose employees have not taken any vacation days in 2019
         public List<Team> GetTeamsWithoutVacationIn2019()
         {
             var yearStart = GetStartOfYear(2019);
@@ -88,5 +80,28 @@ namespace DbStructureEmployees.Services
 
             return teams;
         }
+
+        public static int CountFreeDaysForEmployee(Employee employee, List<Vacation> vacations, VacationPackage vacationPackage)
+        {
+            var year = DateTime.UtcNow.Year;
+            var yearStart = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var yearEnd = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+
+            var usedDays = vacations
+                .Where(v => v.EmployeeId == employee.Id &&
+                            v.DateStart >= yearStart &&
+                            v.DateEnd <= yearEnd)
+                .Sum(v => (v.DateEnd - v.DateStart).Days + 1);
+
+            var freeDays = vacationPackage.TotalDays - usedDays;
+
+            return freeDays > 0 ? freeDays : 0;
+        }
+
+        public static bool IfEmployeeCanRequestVacation(Employee employee, List<Vacation> vacations, VacationPackage vacationPackage)
+        {
+            return CountFreeDaysForEmployee(employee, vacations, vacationPackage) > 0;
+        }
+
     }
 }
