@@ -160,9 +160,9 @@ dotnet test
 - Extend lazy loading for related entities.
 
 ### Contact / Author
-Julia Glocka
-GitHub: https://github.com/JuliaGlocka
-Email: glockajulia@gmail.com
+**Julia Głocka**
+- Email: glockajulia@gmail.com
+- GitHub: https://github.com/JuliaGlocka
 ---
 
 ## Wersja Polska <a name="wersja-polska"></a>
