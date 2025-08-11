@@ -54,7 +54,14 @@ namespace DbStructureEmployees.Tests
             // arrange
             var employees = new List<Employee>
             {
-                new Employee { Id = 1, Name = "Jan Kowalski", SuperiorId = 0 } // no superior possible
+                new Employee
+                {
+                    Id = 1,
+                    Name = "Jan Kowalski",
+                    SuperiorId = null,
+                    Team = new Team { Id = 1, Name = "Team A" },
+                    Vacations = new List<Vacation>()
+                } // no superior
             };
             var employeeStructure = new EmployeeStructure();
 
@@ -63,7 +70,41 @@ namespace DbStructureEmployees.Tests
 
             // assert
             Assert.NotNull(result);
-            Assert.Empty(result); // no relation, when no superior
+            Assert.Empty(result); // no level, since no superior
+        }
+
+        [Fact]
+        public void FillEmployeesStructure_WithNullableSuperiorId_ShouldHandleNull()
+        {
+            // arrange
+            var employees = new List<Employee>
+            {
+                new Employee
+                {
+                    Id = 1,
+                    Name = "Jan Kowalski",
+                    SuperiorId = null,
+                    Team = new Team { Id = 1, Name = "Team A" },
+                    Vacations = new List<Vacation>()
+                }, // null oznacza brak przełożonego
+                new Employee
+                {
+                    Id = 2,
+                    Name = "Anna Nowak",
+                    SuperiorId = 1,
+                    Team = new Team { Id = 1, Name = "Team A" },
+                    Vacations = new List<Vacation>()
+                }
+            };
+            var employeeStructure = new EmployeeStructure();
+
+            // act
+            var result = employeeStructure.FillEmployeesStructure(employees);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            Assert.Contains(result, r => r.EmployeeId == 2 && r.SuperiorId == 1);
         }
 
         [Fact]
@@ -81,11 +122,34 @@ namespace DbStructureEmployees.Tests
 
         private List<Employee> CreateTestEmployees()
         {
+            var team = new Team { Id = 1, Name = "Team A" };
+
             return new List<Employee>
             {
-                new Employee { Id = 1, Name = "Henryk Kowalski", SuperiorId = 0 },
-                new Employee { Id = 2, Name = "Jan Nowak", SuperiorId = 1 },
-                new Employee { Id = 3, Name = "Anna Wiśniewska", SuperiorId = 2 }
+                new Employee
+                {
+                    Id = 1,
+                    Name = "Henryk Kowalski",
+                    SuperiorId = null,
+                    Team = team,
+                    Vacations = new List<Vacation>()
+                },
+                new Employee
+                {
+                    Id = 2,
+                    Name = "Jan Nowak",
+                    SuperiorId = 1,
+                    Team = team,
+                    Vacations = new List<Vacation>()
+                },
+                new Employee
+                {
+                    Id = 3,
+                    Name = "Anna Wiśniewska",
+                    SuperiorId = 2,
+                    Team = team,
+                    Vacations = new List<Vacation>()
+                }
             };
         }
     }
