@@ -1,4 +1,6 @@
-﻿using DbStructureEmployees.Models;
+﻿using System.Collections.Generic;
+using System.Linq;
+using DbStructureEmployees.Models;
 
 namespace DbStructureEmployees.Services
 {
@@ -6,7 +8,7 @@ namespace DbStructureEmployees.Services
     {
         public int EmployeeId { get; set; }
         public int SuperiorId { get; set; }
-        public int SuperiorLevel { get; set; }
+        public int SuperiorLevel { get; set; } // superior level - 3 is the highest, indirectly superior, 1 is direct superior
 
         public List<EmployeeStructure> FillEmployeesStructure(List<Employee> employees)
         {
@@ -15,7 +17,7 @@ namespace DbStructureEmployees.Services
             foreach (var emp in employees)
             {
                 int level = 1;
-                var currentSuperior = emp.Superior;
+                var currentSuperior = employees.FirstOrDefault(e => e.Id == emp.SuperiorId);
 
                 while (currentSuperior != null)
                 {
@@ -26,7 +28,8 @@ namespace DbStructureEmployees.Services
                         SuperiorLevel = level
                     });
 
-                    currentSuperior = currentSuperior.Superior;
+                    // iterate through the structure upwards
+                    currentSuperior = employees.FirstOrDefault(e => e.Id == currentSuperior.SuperiorId);
                     level++;
                 }
             }
