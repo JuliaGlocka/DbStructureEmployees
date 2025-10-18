@@ -4,18 +4,36 @@ services:
   web:
     build: .
     ports:
-      - "8080:80"
+      - "${PORT_HOST:-8080}:80"
     environment:
-      # !!! In production, this should come from an environment variable, not hardcoded. !!!
-      ConnectionStrings__DefaultConnection: "Server=db;Database=exampledb;User Id=postgres;Password=mysecretpassword;"
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__DefaultConnection: "Server=db;Database=${DB_NAME:-employees_db};User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres};"
     depends_on:
       - db
+    networks:
+      - app-network
 
   db:
-    image: postgres
+    image: postgres:latest
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: mysecretpassword # For demo only
-      POSTGRES_DB: exampledb
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-employees_db}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

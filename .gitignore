@@ -28,9 +28,24 @@ publish/
 docker-compose.override.yml
 docker-compose.override.yaml
 
-# Environment files (e.g. connection strings, secrets)
+# Environment variables
 .env
-.env.* 
+.env.local
+.env.*.local
+.env.*.vault
+
+# Build output files
+builddiag.txt
+compileitems.txt
+
+# IDE
+.vscode/settings.json
+.vs/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
 
 # PostgreSQL data folder (jeśli trzymasz lokalnie)
 pgdata/

@@ -25,28 +25,40 @@ namespace DbStructureEmployees.Services
         private static DateTime GetEndOfYear(int year) =>
             new DateTime(year, 12, 31, 23, 59, 59, DefaultKind);
 
-        public List<Employee> GetEmployeesFromDotNetWithVacationIn2019()
+        public List<Employee> GetEmployeesFromDotNetWithVacationInYear(int year)
+{
+    if (year < 1900 || year > 2100)
+        throw new ArgumentException($"Invalid year: {year}. Must be between 1900 and 2100.", nameof(year));
+
+    var yearStart = GetStartOfYear(year);
+    var yearEnd = GetEndOfYear(year);
+
+    var query = _context.Employees
+        .Include(e => e.Team)
+        .Where(e => e.Team.Name == ".NET" &&
+                    _context.Vacations.Any(v =>
+                        v.EmployeeId == e.Id &&
+                        v.DateStart <= yearEnd &&
+                        v.DateEnd >= yearStart))
+        .ToList();
+
+    return query;
+}
+
+// Keep old method for backward compatibility, add [Obsolete]
+[Obsolete("Use GetEmployeesFromDotNetWithVacationInYear(int year) instead")]
+public List<Employee> GetEmployeesFromDotNetWithVacationIn2019()
+{
+    return GetEmployeesFromDotNetWithVacationInYear(2019);
+}
+
+        public List<(Employee employee, int usedVacationDays)> GetEmployeesVacationDaysUsedInYear(int year)
         {
-            var yearStart = GetStartOfYear(2019);
-            var yearEnd = GetEndOfYear(2019);
+            if (year < 1900 || year > 2100)
+                throw new ArgumentException($"Invalid year: {year}", nameof(year));
 
-            var query = _context.Employees
-                .Include(e => e.Team)
-                .Where(e => e.Team.Name == ".NET" &&
-                            _context.Vacations.Any(v =>
-                                v.EmployeeId == e.Id &&
-                                v.DateStart <= yearEnd &&
-                                v.DateEnd >= yearStart))
-                .ToList();
-
-            return query;
-        }
-
-        public List<(Employee employee, int usedVacationDays)> GetEmployeesVacationDaysUsedThisYear()
-        {
-            var yearStart = GetStartOfYear(2019);
-
-            var today = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0, DefaultKind);
+            var yearStart = GetStartOfYear(year);
+            var today = DateTime.UtcNow;
 
             var query = _context.Employees
                 .Select(e => new
@@ -65,10 +77,19 @@ namespace DbStructureEmployees.Services
             return query;
         }
 
-        public List<Team> GetTeamsWithoutVacationIn2019()
+        [Obsolete("Use GetEmployeesVacationDaysUsedInYear(int year) instead")]
+        public List<(Employee employee, int usedVacationDays)> GetEmployeesVacationDaysUsedThisYear()
         {
-            var yearStart = GetStartOfYear(2019);
-            var yearEnd = GetEndOfYear(2019);
+            return GetEmployeesVacationDaysUsedInYear(DateTime.UtcNow.Year);
+        }
+
+        public List<Team> GetTeamsWithoutVacationInYear(int year)
+        {
+            if (year < 1900 || year > 2100)
+                throw new ArgumentException($"Invalid year: {year}", nameof(year));
+
+            var yearStart = GetStartOfYear(year);
+            var yearEnd = GetEndOfYear(year);
 
             var teams = _context.Teams
                 .Where(team => !_context.Employees
@@ -81,6 +102,12 @@ namespace DbStructureEmployees.Services
                 .ToList();
 
             return teams;
+        }
+
+        [Obsolete("Use GetTeamsWithoutVacationInYear(int year) instead")]
+        public List<Team> GetTeamsWithoutVacationIn2019()
+        {
+            return GetTeamsWithoutVacationInYear(2019);
         }
 
         public static int CountFreeDaysForEmployee(Employee employee, List<Vacation> vacations, VacationPackage vacationPackage)

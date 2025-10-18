@@ -6,6 +6,54 @@
 
 ## English Version <a name="english-version"></a>
 
+## 📌 Project Purpose & Scope
+
+This is an **educational backend project** demonstrating enterprise .NET 
+architecture patterns:
+
+- Complex database relationships (hierarchical data modeling)
+- Business logic implementation and validation
+- Entity Framework Core ORM usage
+- Unit testing with xUnit
+- Docker containerization
+
+**Intended for**: Developers learning .NET/ASP.NET Core concepts
+
+### Known Limitations & Production Considerations
+
+This project is intentionally scoped for learning. The following would be 
+required for production deployment:
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Authentication | ❌ Not Implemented | Add ASP.NET Core Identity or OAuth2 |
+| Authorization | ❌ Not Implemented | Add role-based access control (RBAC) |
+| Logging | ❌ Not Implemented | Add Serilog for structured logging |
+| Error Handling | ⚠️ Minimal | Add global exception middleware |
+| Input Validation | ⚠️ Basic | Add FluentValidation framework |
+| Async/Await | ❌ Not Implemented | Convert to async Task-based operations |
+| HTTPS/TLS | ❌ Not Implemented | Configure certificate-based HTTPS |
+| Health Checks | ❌ Not Implemented | Add /health endpoint for monitoring |
+| API Documentation | ❌ Not Implemented | Add Swagger/OpenAPI |
+| Performance Optimization | ⚠️ Basic | Add Redis caching for hierarchy queries |
+
+### What I Learned Building This
+
+**Technical**:
+- Modeling hierarchical data with self-referential relationships
+- Complex date range queries in LINQ
+- Recursive algorithms for tree traversal
+- EF Core Fluent API configuration
+- xUnit testing patterns and edge cases
+
+**Professional**:
+- Clean architecture principles and layered design
+- Importance of test coverage for business logic
+- Docker containerization workflow
+- Configuration management best practices
+
+---
+
 ### Project Overview
 This project is a .NET Core application designed to manage employee data and their vacation schedules. It uses Entity Framework Core with PostgreSQL as the database. Docker is used for containerization.
 
