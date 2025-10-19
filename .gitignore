@@ -16,6 +16,9 @@ obj/
 
 # Logs
 *.log
+logs/
+logs/**/*.txt
+logs/**/*.log
 
 # NuGet packages
 *.nupkg
