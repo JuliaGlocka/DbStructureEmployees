@@ -40,6 +40,7 @@ docker-compose.override.yaml
 # Build output files
 builddiag.txt
 compileitems.txt
+*.diag
 
 # IDE
 .vscode/settings.json

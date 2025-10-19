@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using DbStructureEmployees.Data;
@@ -32,7 +33,7 @@ namespace DbStructureEmployees.Services
         /// </summary>
         /// <param name="year">The year to query</param>
         /// <returns>List of employees with vacations in the specified year</returns>
-        public List<Employee> GetEmployeesFromDotNetWithVacationInYear(int year)
+        public async Task<List<Employee>> GetEmployeesFromDotNetWithVacationInYearAsync(int year)
         {
             _logger.LogInformation("Querying employees from .NET team with vacations in year {Year}", year);
 
@@ -47,14 +48,14 @@ namespace DbStructureEmployees.Services
                 var yearStart = GetStartOfYear(year);
                 var yearEnd = GetEndOfYear(year);
 
-                var query = _context.Employees
+                var query = await _context.Employees
                     .Include(e => e.Team)
                     .Where(e => e.Team.Name == ".NET" &&
                                 _context.Vacations.Any(v =>
                                     v.EmployeeId == e.Id &&
                                     v.DateStart <= yearEnd &&
                                     v.DateEnd >= yearStart))
-                    .ToList();
+                    .ToListAsync();
 
                 _logger.LogInformation("Found {EmployeeCount} employees from .NET team with vacations in year {Year}",
                     query.Count, year);
@@ -69,14 +70,14 @@ namespace DbStructureEmployees.Services
         }
 
         /// <summary>
-        /// Obsolete: Use GetEmployeesFromDotNetWithVacationInYear(int year) instead
+        /// Obsolete: Use GetEmployeesFromDotNetWithVacationInYearAsync(int year) instead
         /// </summary>
-        [Obsolete("Use GetEmployeesFromDotNetWithVacationInYear(int year) instead")]
-        public List<Employee> GetEmployeesFromDotNetWithVacationIn2019()
+        [Obsolete("Use GetEmployeesFromDotNetWithVacationInYearAsync(int year) instead")]
+        public async Task<List<Employee>> GetEmployeesFromDotNetWithVacationIn2019Async()
         {
-            _logger.LogWarning("Deprecated method GetEmployeesFromDotNetWithVacationIn2019() called. " +
-                "Use parameterized version GetEmployeesFromDotNetWithVacationInYear(int year)");
-            return GetEmployeesFromDotNetWithVacationInYear(2019);
+            _logger.LogWarning("Deprecated method GetEmployeesFromDotNetWithVacationIn2019Async() called. " +
+                "Use parameterized version GetEmployeesFromDotNetWithVacationInYearAsync(int year)");
+            return await GetEmployeesFromDotNetWithVacationInYearAsync(2019);
         }
 
         /// <summary>
@@ -84,7 +85,7 @@ namespace DbStructureEmployees.Services
         /// </summary>
         /// <param name="year">The year to calculate for</param>
         /// <returns>List of employees with their used vacation days count</returns>
-        public List<(Employee employee, int usedVacationDays)> GetEmployeesVacationDaysUsedInYear(int year)
+        public async Task<List<(Employee employee, int usedVacationDays)>> GetEmployeesVacationDaysUsedInYearAsync(int year)
         {
             _logger.LogInformation("Calculating vacation days used for all employees in year {Year}", year);
 
@@ -99,7 +100,7 @@ namespace DbStructureEmployees.Services
                 var yearStart = GetStartOfYear(year);
                 var today = DateTime.UtcNow;
 
-                var query = _context.Employees
+                var query = await _context.Employees
                     .Select(e => new
                     {
                         Employee = e,
@@ -109,14 +110,16 @@ namespace DbStructureEmployees.Services
                                         v.DateEnd <= today)
                             .Sum(v => (v.DateEnd - v.DateStart).Days + 1)
                     })
-                    .AsEnumerable()
+                    .ToListAsync();
+
+                var result = query
                     .Select(x => (x.Employee, x.UsedDays))
                     .ToList();
 
                 _logger.LogInformation("Calculated vacation days for {EmployeeCount} employees in year {Year}",
-                    query.Count, year);
+                    result.Count, year);
 
-                return query;
+                return result;
             }
             catch (Exception ex)
             {
@@ -126,14 +129,14 @@ namespace DbStructureEmployees.Services
         }
 
         /// <summary>
-        /// Obsolete: Use GetEmployeesVacationDaysUsedInYear(int year) instead
+        /// Obsolete: Use GetEmployeesVacationDaysUsedInYearAsync(int year) instead
         /// </summary>
-        [Obsolete("Use GetEmployeesVacationDaysUsedInYear(int year) instead")]
-        public List<(Employee employee, int usedVacationDays)> GetEmployeesVacationDaysUsedThisYear()
+        [Obsolete("Use GetEmployeesVacationDaysUsedInYearAsync(int year) instead")]
+        public async Task<List<(Employee employee, int usedVacationDays)>> GetEmployeesVacationDaysUsedThisYearAsync()
         {
-            _logger.LogWarning("Deprecated method GetEmployeesVacationDaysUsedThisYear() called. " +
-                "Use parameterized version GetEmployeesVacationDaysUsedInYear(int year)");
-            return GetEmployeesVacationDaysUsedInYear(DateTime.UtcNow.Year);
+            _logger.LogWarning("Deprecated method GetEmployeesVacationDaysUsedThisYearAsync() called. " +
+                "Use parameterized version GetEmployeesVacationDaysUsedInYearAsync(int year)");
+            return await GetEmployeesVacationDaysUsedInYearAsync(DateTime.UtcNow.Year);
         }
 
         /// <summary>
@@ -141,7 +144,7 @@ namespace DbStructureEmployees.Services
         /// </summary>
         /// <param name="year">The year to query</param>
         /// <returns>List of teams without vacation in the specified year</returns>
-        public List<Team> GetTeamsWithoutVacationInYear(int year)
+        public async Task<List<Team>> GetTeamsWithoutVacationInYearAsync(int year)
         {
             _logger.LogInformation("Querying teams without vacation in year {Year}", year);
 
@@ -156,7 +159,7 @@ namespace DbStructureEmployees.Services
                 var yearStart = GetStartOfYear(year);
                 var yearEnd = GetEndOfYear(year);
 
-                var teams = _context.Teams
+                var teams = await _context.Teams
                     .Where(team => !_context.Employees
                         .Where(e => e.TeamId == team.Id)
                         .Any(e => _context.Vacations
@@ -164,7 +167,7 @@ namespace DbStructureEmployees.Services
                                 v.EmployeeId == e.Id &&
                                 v.DateStart <= yearEnd &&
                                 v.DateEnd >= yearStart)))
-                    .ToList();
+                    .ToListAsync();
 
                 _logger.LogInformation("Found {TeamCount} teams without vacation in year {Year}", teams.Count, year);
 
@@ -178,14 +181,14 @@ namespace DbStructureEmployees.Services
         }
 
         /// <summary>
-        /// Obsolete: Use GetTeamsWithoutVacationInYear(int year) instead
+        /// Obsolete: Use GetTeamsWithoutVacationInYearAsync(int year) instead
         /// </summary>
-        [Obsolete("Use GetTeamsWithoutVacationInYear(int year) instead")]
-        public List<Team> GetTeamsWithoutVacationIn2019()
+        [Obsolete("Use GetTeamsWithoutVacationInYearAsync(int year) instead")]
+        public async Task<List<Team>> GetTeamsWithoutVacationIn2019Async()
         {
-            _logger.LogWarning("Deprecated method GetTeamsWithoutVacationIn2019() called. " +
-                "Use parameterized version GetTeamsWithoutVacationInYear(int year)");
-            return GetTeamsWithoutVacationInYear(2019);
+            _logger.LogWarning("Deprecated method GetTeamsWithoutVacationIn2019Async() called. " +
+                "Use parameterized version GetTeamsWithoutVacationInYearAsync(int year)");
+            return await GetTeamsWithoutVacationInYearAsync(2019);
         }
 
         /// <summary>

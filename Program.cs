@@ -1,6 +1,8 @@
 using DbStructureEmployees.Data;
+using DbStructureEmployees.Middleware;
 using DbStructureEmployees.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
 // Configure Serilog before building the app
@@ -48,11 +50,16 @@ try
 
         options.UseNpgsql(connectionString);
     });
+    // Add health checks
+    builder.Services
+       .AddHealthChecks();
 
     var app = builder.Build();
 
     Log.Information("Application built successfully. Configuring middleware...");
 
+    // Add global exception handling middleware
+    app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
     // Configure the HTTP request pipeline
     if (!app.Environment.IsDevelopment())
     {
@@ -74,6 +81,17 @@ try
 
     // Map Razor Pages endpoints
     app.MapRazorPages();
+
+    // Map health check endpoints
+    app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
+
+    app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("ready")
+    });
 
     Log.Information("Application configured. Starting to listen on port 80...");
 
