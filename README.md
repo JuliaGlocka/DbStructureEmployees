@@ -6,365 +6,573 @@
 
 ## English Version <a name="english-version"></a>
 
-## 📌 Project Purpose & Scope
+### 📌 Project Overview
 
-This is an **educational backend project** demonstrating enterprise .NET 
-architecture patterns:
+A production-ready ASP.NET Core 8.0 application demonstrating enterprise-grade patterns for employee management and organizational hierarchy. This project showcases modern .NET development practices including Entity Framework Core, structured logging, containerization, and comprehensive testing.
 
-- Complex database relationships (hierarchical data modeling)
-- Business logic implementation and validation
-- Entity Framework Core ORM usage
-- Unit testing with xUnit
+**Tech Stack:**
+- ASP.NET Core 8.0 (Razor Pages)
+- Entity Framework Core 9.0 with PostgreSQL
+- Serilog for structured logging
 - Docker containerization
+- xUnit for unit testing
 
-**Intended for**: Developers learning .NET/ASP.NET Core concepts
+### 🎯 Key Features
 
-### Known Limitations & Production Considerations
+#### Core Functionality
+- **Hierarchical Employee Management**: Self-referential relationships for organizational structure
+- **Vacation Management**: Track employee vacations with validation and remaining days calculation
+- **Team Organization**: Group employees by teams with vacation analytics
+- **Advanced Queries**: Complex LINQ queries for vacation reports and team analytics
 
-This project is intentionally scoped for learning. The following would be 
-required for production deployment:
+#### Production-Ready Features
+- ✅ **Global Exception Handling**: Centralized error handling with consistent response format
+- ✅ **Structured Logging**: Serilog integration with console and file outputs
+- ✅ **Health Checks**: Kubernetes-ready liveness and readiness endpoints
+- ✅ **Input Validation**: Comprehensive validation with Data Annotations
+- ✅ **Async Operations**: Full async/await pattern implementation
+- ✅ **Docker Support**: Multi-stage Dockerfile with security updates
+- ✅ **Configuration Management**: Environment-based settings with .env support
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Authentication | ❌ Not Implemented | Add ASP.NET Core Identity or OAuth2 |
-| Authorization | ❌ Not Implemented | Add role-based access control (RBAC) |
-| Logging | ❌ Not Implemented | Add Serilog for structured logging |
-| Error Handling | ⚠️ Minimal | Add global exception middleware |
-| Input Validation | ⚠️ Basic | Add FluentValidation framework |
-| Async/Await | ❌ Not Implemented | Convert to async Task-based operations |
-| HTTPS/TLS | ❌ Not Implemented | Configure certificate-based HTTPS |
-| Health Checks | ❌ Not Implemented | Add /health endpoint for monitoring |
-| API Documentation | ❌ Not Implemented | Add Swagger/OpenAPI |
-| Performance Optimization | ⚠️ Basic | Add Redis caching for hierarchy queries |
+### 🏗️ Architecture & Design Patterns
 
-### What I Learned Building This
+**Layered Architecture:**
+```
+Presentation Layer (Razor Pages, Controllers)
+    ↓
+Service Layer (Business Logic)
+    ↓
+Data Access Layer (EF Core, DbContext)
+    ↓
+Database (PostgreSQL)
+```
 
-**Technical**:
-- Modeling hierarchical data with self-referential relationships
-- Complex date range queries in LINQ
-- Recursive algorithms for tree traversal
-- EF Core Fluent API configuration
-- xUnit testing patterns and edge cases
+**Key Design Decisions:**
+- **Repository Pattern**: DbContext acts as Unit of Work
+- **Service Layer**: Business logic separated from controllers
+- **Dependency Injection**: Built-in ASP.NET Core DI container
+- **Middleware Pipeline**: Custom exception handling middleware
 
-**Professional**:
-- Clean architecture principles and layered design
-- Importance of test coverage for business logic
-- Docker containerization workflow
-- Configuration management best practices
+### 📂 Project Structure
 
----
-
-### Project Overview
-This project is a .NET Core application designed to manage employee data and their vacation schedules. It uses Entity Framework Core with PostgreSQL as the database. Docker is used for containerization.
-
-### Technologies
-- .NET 8.0
-- EF Core with PostgreSQL provider
-- Docker (for containerization)
-- Xunit for unit testing
-
-### Project Structure
-```bash
+```
 DbStructureEmployees/
-│
-├── Controllers/                                  // Controllers handling API or MVC requests
-│ └── EmployeesController.cs                     // Controller managing employee-related endpoints
-│
-├── Data/                                         // EF Core configuration and DbContext
-│ └── AppDbContext.cs                            // Main database context
-│
-├── DbStructureEmployees.Tests/                // Unit tests project
-│ ├── DbStructureEmployees.Tests.csproj
-│ ├── EmployeeStructureTest.cs             
-│ ├── EmployeeTest.cs 
-│ ├── bin/
-│ └── obj/
-│
-├── Models/ 
-│ └── Employee.cs 
-│
-├── Pages/                                       // Razor Pages (UI views)
-│ ├── Error.cshtml                              // Error page
-│ ├── Index.cshtml                             // Main/home page
-│ ├── Privacy.cshtml                          // Privacy policy page
-│ ├── Shared/                                // Shared layout and partial views
-│ ├── _ViewImports.cshtml                   // Razor view imports
-│ └── _ViewStart.cshtml                    // Razor view startup configuration
-│
-├── Properties/                             // Project properties and settings
-│ └── launchSettings.json                  // Launch configuration for debugging
-│
-├── Services/                       // Business logic and service classes
-│ └── EmployeeStructure.cs
-│
-├── wwwroot/                     // Static files (CSS, JS, images, libs)
-│ ├── css/
-│ ├── favicon.ico
-│ ├── js/
-│ └── lib/
-│
-├── Dockerfile                                  // Docker image build definition
-├── Run-DockerContainer.ps1                    // PowerShell script to run Docker container
-├── docker-compose.yml                        // Docker Compose configuration (if used)
-├── appsettings.json                         // Main application configuration
-├── appsettings.Development.json            // Development environment config
-├── Program.cs                             // Application entry point (.NET Core)
-├── README.md // Project documentation
-├── DbStructureEmployees.csproj             // .NET project file
-├── DbStructureEmployees.sln               // Visual Studio solution file
-├── builddiag.txt                         // Optional diagnostic files
-├── compileitems.txt
-├── bin/                                // Compiled binaries output
-└── obj/                               // Intermediate compilation files
-```
- & Highlights
-- **Models:** Employee, Vacation, VacationPackage, Team — core domain entities.
-- **Services:** EmployeeQueries - contains queries and business logic for employees and vacations.
-- **DbContext:** Manages database connection and entity mapping.
-- **Key Methods:**
-  - `GetEmployeesFromDotNetWithVacationIn2019()` — filters employees by team and vacations.
-  - `CountFreeDaysForEmployee()` — calculates remaining vacation days.
-  - `IfEmployeeCanRequestVacation()` — returns if employee can request vacation based on remaining days.
-
-#### Code snippet - CountFreeDaysForEmployee:
-```csharp
-public static int CountFreeDaysForEmployee(Employee employee, List<Vacation> vacations, VacationPackage vacationPackage)
-{
-    var year = DateTime.UtcNow.Year;
-    var usedDays = vacations
-        .Where(v => v.EmployeeId == employee.Id && v.DateStart.Year == year)
-        .Sum(v => (v.DateEnd - v.DateStart).Days + 1);
-
-    var freeDays = vacationPackage.TotalDays - usedDays;
-    return freeDays > 0 ? freeDays : 0;
-}
+├── Controllers/              # MVC Controllers
+│   └── EmployeesController.cs
+├── Data/                     # EF Core Configuration
+│   └── AppDbContext.cs       # Database context with Fluent API
+├── Models/                   # Domain Entities
+│   ├── Employee.cs           # Self-referential hierarchy
+│   ├── Team.cs
+│   ├── Vacation.cs
+│   └── VacationPackage.cs
+├── Services/                 # Business Logic Layer
+│   ├── EmployeeQueries.cs    # Complex queries & calculations
+│   └── EmployeeStructure.cs  # Hierarchy traversal
+├── Middleware/
+│   └── GlobalExceptionHandlerMiddleware.cs  # Centralized error handling
+├── Pages/                    # Razor Pages UI
+├── DbStructureEmployees.Tests/  # Unit Tests
+│   ├── EmployeeTest.cs
+│   ├── EmployeeStructureTest.cs
+│   └── EmployeeVacationTest.cs
+├── Dockerfile                # Multi-stage Docker build
+├── docker-compose.yml        # Docker Compose orchestration
+├── Program.cs                # Application entry point
+└── appsettings.json          # Configuration
 ```
 
-### Running the project
+### 🚀 Getting Started
 
-1. Clone repository:
+#### Prerequisites
+- .NET 8.0 SDK
+- PostgreSQL 15+
+- Docker Desktop (optional, for containerization)
+
+#### Local Development Setup
+
+1. **Clone the repository**
 ```bash
 git clone https://github.com/JuliaGlocka/DbStructureEmployees
 cd DbStructureEmployees
 ```
 
-2. Ensure PostgreSQL is running and connection string is updated in `appsettings.json`.
+2. **Configure PostgreSQL Connection**
 
-3. Apply migrations:
+Update `appsettings.Development.json`:
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Port=5432;Database=employees_db;User Id=postgres;Password=your_password;"
+  }
+}
+```
+
+3. **Apply Database Migrations**
 ```bash
 dotnet ef database update
 ```
 
-4. Run project:
+4. **Run the Application**
 ```bash
 dotnet run
 ```
 
-5. (Optional) Docker:
+Application will be available at: `http://localhost:5115`
+
+#### Docker Deployment
+
+**Option 1: Docker Compose (Recommended)**
 ```bash
-docker build -t dbstructureemployees .
-docker run -p 5000:5000 dbstructureemployees
+# Copy environment template
+cp .env.development .env
+
+# Edit .env with your settings
+# Start both application and database
+docker-compose up -d
 ```
 
-#### Personal Development Setup (Recommended)
-If you're using Windows with Docker Desktop, here's a step-by-step approach that works well:
-
-1. **Open Docker Desktop** (make sure it's running)
-
-2. **Open Bash** and navigate to project directory
-
-3. **Build Docker image**:
-```bash
-docker build -t your_dockerhub_username/your_image_name:your_tag .
-```
-
-4. **Open PowerShell** and navigate to project directory
-
-5. **Run the container using PowerShell script**:
+**Option 2: Docker with PowerShell Script**
 ```powershell
-.\Run-DockerContainer.ps1 -containerName "your_container_name" -imageName "your_dockerhub_username/your_image_name:tag" -portHost 5000 -portContainer 80
+# Build image
+docker build -t dbstructureemployees:latest .
+
+# Run container
+.\Run-DockerContainer.ps1 -containerName "my-app" -imageName "dbstructureemployees:latest" -portHost 8080
 ```
 
-6. **Test the application**:
-   - Open browser and go to: http://localhost:5000
-   - Or test with curl in Bash: `curl http://localhost:5000`
+**Option 3: Manual Docker Commands**
+```bash
+# Build
+docker build -t dbstructureemployees .
 
-### Verifying EF Core connection with PostgreSQL
-- Use `dotnet ef migrations list` to check existing migrations.
-- Use `dotnet ef database update` to apply migrations.
-- Check logs for successful connection on startup.
+# Run
+docker run -d -p 8080:80 \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  --name dbstructureemployees \
+  dbstructureemployees
+```
 
-### Tests
-- Unit tests use Xunit.
-- Test cases cover vacation request eligibility.
-- Tests can be run with:
+### 🧪 Testing
+
+Run all unit tests:
 ```bash
 dotnet test
 ```
 
-### Possible extensions
-- Implement caching to reduce DB hits.
-- Use DTOs to optimize data transfer.
-- Extend lazy loading for related entities.
+Run tests with coverage:
+```bash
+dotnet test /p:CollectCoverage=true
+```
 
-### Contact / Author
+**Test Coverage:**
+- Employee model validation
+- Vacation eligibility logic
+- Hierarchy traversal algorithms
+- Edge cases (null superiors, circular references)
+
+### 📊 Key Code Examples
+
+#### Calculating Remaining Vacation Days
+```csharp
+public static int CountFreeDaysForEmployee(
+    Employee employee,
+    List<Vacation> vacations,
+    VacationPackage vacationPackage)
+{
+    var year = DateTime.UtcNow.Year;
+    var usedDays = vacations
+        .Where(v => v.EmployeeId == employee.Id && 
+                    v.DateStart.Year == year)
+        .Sum(v => (v.DateEnd - v.DateStart).Days + 1);
+    
+    var freeDays = vacationPackage.TotalDays - usedDays;
+    return Math.Max(freeDays, 0);
+}
+```
+
+#### Building Organizational Hierarchy
+```csharp
+public List<EmployeeStructure> FillEmployeesStructure(List<Employee> employees)
+{
+    var structure = new List<EmployeeStructure>();
+    
+    foreach (var emp in employees)
+    {
+        int level = 1;
+        var currentSuperior = employees.FirstOrDefault(e => e.Id == emp.SuperiorId);
+        
+        while (currentSuperior != null)
+        {
+            structure.Add(new EmployeeStructure
+            {
+                EmployeeId = emp.Id,
+                SuperiorId = currentSuperior.Id,
+                SuperiorLevel = level
+            });
+            
+            currentSuperior = employees.FirstOrDefault(e => 
+                e.Id == currentSuperior.SuperiorId);
+            level++;
+        }
+    }
+    
+    return structure;
+}
+```
+
+### 🔍 API Endpoints
+
+#### Health Checks
+- `GET /health/live` - Liveness probe (Kubernetes-ready)
+- `GET /health/ready` - Readiness probe (Kubernetes-ready)
+
+#### Pages
+- `/` - Home page
+- `/Privacy` - Privacy policy
+- `/Error` - Error handling page
+
+### 📈 Performance Considerations
+
+**Database Optimization:**
+- Eager loading with `.Include()` to prevent N+1 queries
+- Indexed foreign keys for hierarchical queries
+- Connection pooling enabled by default
+
+**Caching Opportunities (Not Implemented):**
+- Redis cache for frequently accessed hierarchies
+- Memory cache for vacation package lookups
+- Distributed cache for multi-instance deployments
+
+### 🔐 Security Features
+
+- **Input Validation**: Data Annotations on all models
+- **SQL Injection Protection**: Parameterized queries via EF Core
+- **Error Information Disclosure**: Detailed errors only in Development mode
+- **Security Headers**: Can be enhanced with middleware
+- **Docker Security**: Multi-stage builds, non-root user recommended
+
+### 📝 Configuration
+
+**Environment Variables:**
+```bash
+ASPNETCORE_ENVIRONMENT=Development|Production
+ConnectionStrings__DefaultConnection=<PostgreSQL connection string>
+```
+
+**appsettings.json:**
+- Connection strings
+- Serilog configuration (log levels, sinks)
+- Allowed hosts
+
+### 🛠️ Development Tools
+
+**Useful Commands:**
+```bash
+# Watch mode (auto-reload on changes)
+dotnet watch run
+
+# List migrations
+dotnet ef migrations list
+
+# Create new migration
+dotnet ef migrations add MigrationName
+
+# Database update
+dotnet ef database update
+
+# Run specific test
+dotnet test --filter FullyQualifiedName~EmployeeTest
+```
+
+### 🚧 Known Limitations
+
+This project is designed for educational purposes. For production deployment, consider:
+
+| Feature | Status | Recommendation |
+|---------|--------|----------------|
+| Authentication | ❌ | Implement ASP.NET Core Identity or OAuth2/OIDC |
+| Authorization | ❌ | Add role-based or policy-based authorization |
+| Rate Limiting | ❌ | Add middleware for API rate limiting |
+| HTTPS/TLS | ⚠️ | Configure SSL certificates for production |
+| API Versioning | ❌ | Implement versioning strategy |
+| Caching | ❌ | Add Redis or memory cache |
+| Monitoring | ⚠️ | Integrate Application Insights or Prometheus |
+| Data Validation | ✅ | Implemented with Data Annotations |
+| Error Handling | ✅ | Global middleware implemented |
+| Logging | ✅ | Serilog structured logging |
+| Health Checks | ✅ | Kubernetes-ready endpoints |
+
+### 📚 What This Project Demonstrates
+
+**Technical Skills:**
+- Entity Framework Core with complex relationships
+- Self-referential foreign keys for hierarchical data
+- LINQ for complex queries (date ranges, aggregations)
+- Async/await patterns throughout
+- Structured logging with Serilog
+- Global exception handling middleware
+- Docker multi-stage builds
+- Unit testing with xUnit
+
+**Software Engineering Practices:**
+- Clean Architecture principles
+- Separation of concerns (layers)
+- Dependency Injection
+- SOLID principles
+- Code documentation (XML comments)
+- Configuration management
+- Error handling strategies
+
+### 🔄 Future Enhancements
+
+**Short-term:**
+- [ ] Add REST API endpoints (Controllers)
+- [ ] Implement DTOs for API responses
+- [ ] Add AutoMapper for object mapping
+- [ ] Expand test coverage to >80%
+
+**Medium-term:**
+- [ ] Add authentication (ASP.NET Core Identity)
+- [ ] Implement authorization with policies
+- [ ] Add Swagger/OpenAPI documentation
+- [ ] Implement CQRS pattern with MediatR
+
+**Long-term:**
+- [ ] Migrate to Clean Architecture structure
+- [ ] Add event sourcing for audit trail
+- [ ] Implement Redis caching
+- [ ] Add SignalR for real-time notifications
+- [ ] Containerize with Kubernetes manifests
+
+### 🤝 Contributing
+
+This is an educational project, but suggestions and improvements are welcome!
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### 📞 Contact
+
 **Julia Głocka**
 - Email: glockajulia@gmail.com
-- GitHub: https://github.com/JuliaGlocka
+- GitHub: [@JuliaGlocka](https://github.com/JuliaGlocka)
+- LinkedIn: [Connect with me](https://linkedin.com/in/julia-glocka)
+
+### 📄 License
+
+This project is open source and available under the MIT License.
+
 ---
 
 ## Wersja Polska <a name="wersja-polska"></a>
 
-### Opis projektu
-Projekt to aplikacja .NET Core do zarządzania pracownikami i ich urlopami. Korzysta z Entity Framework Core i bazy PostgreSQL. Projekt jest dockeryzowany.
+### 📌 Przegląd Projektu
 
-### Technologie
-- .NET 8.0
-- EF Core z providerem PostgreSQL
-- Docker (konteneryzacja)
-- Xunit (testy jednostkowe)
+Aplikacja ASP.NET Core 8.0 gotowa do produkcji, demonstrująca wzorce enterprise dla zarządzania pracownikami i strukturą organizacyjną. Projekt prezentuje nowoczesne praktyki programowania .NET, w tym Entity Framework Core, strukturalne logowanie, konteneryzację i kompleksowe testowanie.
 
-### Struktura projektu i najważniejsze elementy
-```bash
-DbStructureEmployees/
-│
-├── Controllers/                                  // Kontrolery obsługujące żądania API lub MVC
-│ └── EmployeesController.cs                     //  Kontroler zarządzający endpointami związanymi z pracownikami
-│
-├── Data/                                         //  Konfiguracja EF Core i DbContext
-│ └── AppDbContext.cs                            //   Główny kontekst bazy danych
-│
-├── DbStructureEmployees.Tests/                // Projekt testów jednostkowych
-│ ├── DbStructureEmployees.Tests.csproj
-│ ├── EmployeeStructureTest.cs             
-│ ├── EmployeeTest.cs 
-│ ├── bin/
-│ └── obj/
-│
-├── Models/                                         //  Modele danych
-│ └── Employee.cs                                  //   Model reprezentujący pracownika
-│
-├── Pages/                                       // Razor Pages ( UI)
-│ ├── Error.cshtml                              //  Strona błędu
-│ ├── Index.cshtml                             //   Strona główna
-│ ├── Privacy.cshtml                          //    Strona polityki prywatności
-│ ├── Shared/                                //     Wspólny layout i widoki częściowe
-│ ├── _ViewImports.cshtml                   //      Importy dla widoków Razor
-│ └── _ViewStart.cshtml                    //       Konfiguracja startowa dla Razor Pages
-│
-├── Properties/                             // Właściwości projektu i ustawienia
-│ └── launchSettings.json                  //  Konfiguracja uruchamiania do debugowania
-│
-├── Services/                       // Logika biznesowa i klasy usługowe
-│ └── EmployeeStructure.cs         //  Klasa obsługująca strukturę pracowników
-│
-├── wwwroot/                     // Pliki statyczne (CSS, JS, obrazy, biblioteki)
-│ ├── css/
-│ ├── favicon.ico
-│ ├── js/
-│ └── lib/
-│
-├── Dockerfile                                  // Definicja budowania obrazu Docker
-├── Run-DockerContainer.ps1                    // Skrypt PowerShell do uruchamiania kontenera Docker
-├── docker-compose.yml                        // Konfiguracja Docker Compose (jeśli używana)
-├── appsettings.json                         // Główna konfiguracja aplikacji
-├── appsettings.Development.json            // Konfiguracja środowiska developerskiego
-├── Program.cs                             // Punkt wejścia aplikacji (.NET Core)
-├── README.md                             // Dokumentacja projektu
-├── DbStructureEmployees.csproj             // Plik projektu .NET
-├── DbStructureEmployees.sln               // Plik rozwiązania Visual Studio
-├── builddiag.txt                         // Opcjonalne pliki diagnostyczne
-├── compileitems.txt
-├── bin/                                // Wyjściowe pliki binarne
-└── obj/                               // Pliki pośrednie kompilacjis
+**Stack Technologiczny:**
+- ASP.NET Core 8.0 (Razor Pages)
+- Entity Framework Core 9.0 z PostgreSQL
+- Serilog do strukturalnego logowania
+- Konteneryzacja Docker
+- xUnit do testów jednostkowych
+
+### 🎯 Kluczowe Funkcje
+
+#### Główna Funkcjonalność
+- **Hierarchiczne Zarządzanie Pracownikami**: Samo-referencyjne relacje dla struktury organizacyjnej
+- **Zarządzanie Urlopami**: Śledzenie urlopów z walidacją i obliczaniem pozostałych dni
+- **Organizacja Zespołów**: Grupowanie pracowników z analizą urlopów
+- **Zaawansowane Zapytania**: Kompleksowe zapytania LINQ dla raportów urlopowych
+
+#### Funkcje Gotowe do Produkcji
+- ✅ **Globalna Obsługa Wyjątków**: Scentralizowana obsługa błędów
+- ✅ **Strukturalne Logowanie**: Integracja Serilog
+- ✅ **Health Checks**: Endpointy dla Kubernetes
+- ✅ **Walidacja Danych**: Kompleksowa walidacja
+- ✅ **Operacje Asynchroniczne**: Pełny wzorzec async/await
+- ✅ **Wsparcie Docker**: Wieloetapowy Dockerfile
+- ✅ **Zarządzanie Konfiguracją**: Ustawienia zależne od środowiska
+
+### 🏗️ Architektura
+
+**Architektura Warstwowa:**
+```
+Warstwa Prezentacji (Razor Pages, Controllers)
+    ↓
+Warstwa Usług (Logika Biznesowa)
+    ↓
+Warstwa Dostępu do Danych (EF Core, DbContext)
+    ↓
+Baza Danych (PostgreSQL)
 ```
 
-- **Modele:** Employee, Vacation, VacationPackage, Team — podstawowe encje domenowe.
-- **Serwisy:** EmployeeQueries — logika biznesowa i zapytania dotyczące pracowników i urlopów.
-- **DbContext:** zarządza połączeniem z bazą i mapowaniem encji.
-- **Kluczowe metody:**
-  - `GetEmployeesFromDotNetWithVacationIn2019()` — zwraca pracowników z zespołu .NET z urlopami w 2019 r.
-  - `CountFreeDaysForEmployee()` — oblicza pozostałą liczbę dni urlopu.
-  - `IfEmployeeCanRequestVacation()` — sprawdza, czy pracownik może prosić o urlop.
+### 🚀 Szybki Start
 
-#### Fragment kodu - CountFreeDaysForEmployee:
-```csharp
-public static int CountFreeDaysForEmployee(Employee employee, List<Vacation> vacations, VacationPackage vacationPackage)
-{
-    var year = DateTime.UtcNow.Year;
-    var usedDays = vacations
-        .Where(v => v.EmployeeId == employee.Id && v.DateStart.Year == year)
-        .Sum(v => (v.DateEnd - v.DateStart).Days + 1);
+#### Wymagania
+- .NET 8.0 SDK
+- PostgreSQL 15+
+- Docker Desktop (opcjonalnie)
 
-    var freeDays = vacationPackage.TotalDays - usedDays;
-    return freeDays > 0 ? freeDays : 0;
-}
-```
-### Uruchomienie projektu
+#### Konfiguracja Lokalna
 
-1. Sklonuj repozytorium:
+1. **Sklonuj repozytorium**
 ```bash
 git clone https://github.com/JuliaGlocka/DbStructureEmployees
 cd DbStructureEmployees
 ```
 
-2. Upewnij się, że PostgreSQL działa i poprawnie skonfigurowano connection string w `appsettings.json`.
+2. **Skonfiguruj Połączenie z PostgreSQL**
 
-3. Wykonaj migracje:
+Zaktualizuj `appsettings.Development.json`:
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Port=5432;Database=employees_db;User Id=postgres;Password=twoje_haslo;"
+  }
+}
+```
+
+3. **Zastosuj Migracje**
 ```bash
 dotnet ef database update
 ```
 
-4. Uruchom projekt:
+4. **Uruchom Aplikację**
 ```bash
 dotnet run
 ```
 
-5. (Opcjonalnie) Docker:
+Aplikacja dostępna pod: `http://localhost:5115`
+
+#### Wdrożenie Docker
+
+**Opcja 1: Docker Compose (Zalecane)**
 ```bash
-docker build -t dbstructureemployees .
-docker run -p 5000:5000 dbstructureemployees
+# Skopiuj szablon środowiska
+cp .env.development .env
+
+# Edytuj .env z własnymi ustawieniami
+# Uruchom aplikację i bazę danych
+docker-compose up -d
 ```
 
-#### Osobiste ustawienia rozwojowe (Zalecane)
-Jeśli używasz Windows z Docker Desktop, oto krok po kroku podejście, które dobrze działa:
-
-1. **Otwórz Docker Desktop** (upewnij się, że działa)
-
-2. **Otwórz Bash** i przejdź do katalogu projektu
-
-3. **Zbuduj obraz Docker**
-
-4. **Otwórz PowerShell** i przejdź do katalogu projektu
-
-5. **Uruchom kontener używając skryptu PowerShell**:
+**Opcja 2: PowerShell Script**
 ```powershell
-.\Run-DockerContainer.ps1 -containerName "nazwa_twojego_kontenera" -imageName "nazwa_uzytkownika_dockerhub/nazwa_obrazu:tag" -portHost 5000 -portContainer 80
+# Zbuduj obraz
+docker build -t dbstructureemployees:latest .
+
+# Uruchom kontener
+.\Run-DockerContainer.ps1 -containerName "moja-app" -imageName "dbstructureemployees:latest" -portHost 8080
 ```
 
-6. **Przetestuj aplikację**:
-   - Otwórz przeglądarkę i idź do: http://localhost:5000
-   - Lub przetestuj z curl w Bash: `curl http://localhost:5000`
+### 🧪 Testowanie
 
-### Weryfikacja połączenia EF Core z PostgreSQL
-- `dotnet ef migrations list` pokazuje dostępne migracje.
-- `dotnet ef database update` stosuje migracje.
-- Logi startowe pokazują czy połączenie z bazą działa poprawnie.
-
-### Testy
-- Testy jednostkowe z Xunit.
-- Testy sprawdzają możliwość zgłaszania urlopu.
-- Uruchom testy poleceniem:
+Uruchom wszystkie testy:
 ```bash
 dotnet test
 ```
 
-### Możliwe rozszerzenia
-- Caching do ograniczenia zapytań do bazy.
-- DTO do optymalizacji transferu danych.
-- Lazy loading dla powiązanych encji.
+**Pokrycie Testami:**
+- Walidacja modelu Employee
+- Logika uprawnień urlopowych
+- Algorytmy przechodzenia hierarchii
+- Przypadki brzegowe
 
-### Kontakt / Autor
+### 📊 Przykłady Kodu
+
+#### Obliczanie Pozostałych Dni Urlopu
+```csharp
+public static int CountFreeDaysForEmployee(
+    Employee employee,
+    List<Vacation> vacations,
+    VacationPackage vacationPackage)
+{
+    var year = DateTime.UtcNow.Year;
+    var usedDays = vacations
+        .Where(v => v.EmployeeId == employee.Id && 
+                    v.DateStart.Year == year)
+        .Sum(v => (v.DateEnd - v.DateStart).Days + 1);
+    
+    var freeDays = vacationPackage.TotalDays - usedDays;
+    return Math.Max(freeDays, 0);
+}
+```
+
+### 🔍 Endpointy API
+
+#### Health Checks
+- `GET /health/live` - Sonda żywotności
+- `GET /health/ready` - Sonda gotowości
+
+### 🚧 Znane Ograniczenia
+
+Projekt stworzony w celach edukacyjnych. Dla wdrożenia produkcyjnego rozważ:
+
+| Funkcja | Status | Rekomendacja |
+|---------|--------|--------------|
+| Uwierzytelnianie | ❌ | Zaimplementuj ASP.NET Core Identity |
+| Autoryzacja | ❌ | Dodaj kontrolę dostępu opartą na rolach |
+| Limitowanie Zapytań | ❌ | Dodaj middleware rate limiting |
+| HTTPS/TLS | ⚠️ | Skonfiguruj certyfikaty SSL |
+| Cache | ❌ | Dodaj Redis lub memory cache |
+| Monitoring | ⚠️ | Zintegruj Application Insights |
+| Walidacja Danych | ✅ | Zaimplementowano |
+| Obsługa Błędów | ✅ | Middleware zaimplementowany |
+| Logowanie | ✅ | Serilog skonfigurowany |
+
+### 📚 Co Demonstruje Ten Projekt
+
+**Umiejętności Techniczne:**
+- Entity Framework Core ze złożonymi relacjami
+- Samo-referencyjne klucze obce dla danych hierarchicznych
+- LINQ dla złożonych zapytań
+- Wzorce async/await
+- Strukturalne logowanie z Serilog
+- Globalna obsługa wyjątków
+- Wieloetapowe buildy Docker
+- Testowanie jednostkowe z xUnit
+
+**Praktyki Inżynierii Oprogramowania:**
+- Zasady Clean Architecture
+- Separacja odpowiedzialności
+- Dependency Injection
+- Zasady SOLID
+- Dokumentacja kodu (komentarze XML)
+- Zarządzanie konfiguracją
+- Strategie obsługi błędów
+
+### 🔄 Przyszłe Ulepszenia
+
+**Krótkoterminowe:**
+- [ ] Dodać endpointy REST API
+- [ ] Zaimplementować DTO dla odpowiedzi API
+- [ ] Dodać AutoMapper
+- [ ] Rozszerzyć pokrycie testów do >80%
+
+**Średnioterminowe:**
+- [ ] Dodać uwierzytelnianie (Identity)
+- [ ] Zaimplementować autoryzację z politykami
+- [ ] Dodać dokumentację Swagger/OpenAPI
+- [ ] Zaimplementować wzorzec CQRS z MediatR
+
+**Długoterminowe:**
+- [ ] Migracja do struktury Clean Architecture
+- [ ] Dodać event sourcing dla śladu audytu
+- [ ] Zaimplementować cache Redis
+- [ ] Dodać SignalR dla powiadomień real-time
+
+### 📞 Kontakt
+
 **Julia Głocka**
 - Email: glockajulia@gmail.com
-- GitHub: https://github.com/JuliaGlocka
+- GitHub: [@JuliaGlocka](https://github.com/JuliaGlocka)
+- LinkedIn: [Połącz się ze mną](https://linkedin.com/in/julia-glocka)
+
+### 📄 Licencja
+
+Projekt open source dostępny na licencji MIT.
